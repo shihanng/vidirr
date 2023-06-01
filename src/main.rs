@@ -1,4 +1,7 @@
 use clap::Parser;
+use std::io::Write;
+use std::process::Command;
+use tempfile::NamedTempFile;
 
 #[derive(Parser)]
 struct Cli {
@@ -17,7 +20,15 @@ fn main() {
         files.push("./".to_string())
     }
 
+    let mut file_list = NamedTempFile::new().expect("cannot create temp file"); // TODO: Handle error
     for file in files {
-        println!("* {}", file)
+        writeln!(file_list, "{}", file).expect("cannot write")
     }
+
+    println!("{:?}", file_list.path()); // TODO: Remove this.
+
+    Command::new("vi")
+        .arg(file_list.path().to_string_lossy().to_string())
+        .status()
+        .expect("Failed to execute command"); // TODO: Handle error
 }
