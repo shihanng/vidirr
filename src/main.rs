@@ -1,5 +1,7 @@
 use clap::Parser;
+use std::fs::File;
 use std::io::Write;
+use std::io::{self, BufRead};
 use std::process::Command;
 use tempfile::NamedTempFile;
 
@@ -31,4 +33,11 @@ fn main() {
         .arg(file_list.path().to_string_lossy().to_string())
         .status()
         .expect("Failed to execute command"); // TODO: Handle error
+                                              //
+    let reader = io::BufReader::new(File::open(file_list.path()).expect("cannot open file"));
+
+    for line in reader.lines() {
+        let line = line.expect("cannot read line");
+        println!("{}", line);
+    }
 }
