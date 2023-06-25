@@ -22,9 +22,15 @@ fn main() {
         files.push("./".to_string())
     }
 
+    let target = vidirr::parse_args(&files, || Box::new(io::stdin().lock())).expect("cannot parse"); // TODO: Handle error
+
     let mut file_list = NamedTempFile::new().expect("cannot create temp file"); // TODO: Handle error
-    for file in files {
+    for file in target.files {
         writeln!(file_list, "{}", file).expect("cannot write")
+    }
+
+    for dir in target.dirs {
+        writeln!(file_list, "{}/", dir).expect("cannot write")
     }
 
     println!("{:?}", file_list.path()); // TODO: Remove this.
