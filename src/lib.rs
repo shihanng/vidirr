@@ -7,6 +7,14 @@ pub struct Parsed {
     pub dirs: Vec<String>,
 }
 
+impl Parsed {
+    pub fn all(&self) -> Vec<String> {
+        let mut all = self.files.clone();
+        all.extend(self.dirs.clone());
+        all
+    }
+}
+
 // https://stackoverflow.com/questions/38183551/concisely-initializing-a-vector-of-strings
 pub fn parse_args<F>(args: &[String], read_from: F) -> io::Result<Parsed>
 where
@@ -126,5 +134,26 @@ mod tests {
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), expected);
+    }
+
+    #[test]
+    fn test_all() {
+        let parsed = Parsed {
+            files: vec![
+                "./src/testdata/file2".to_string(),
+                "./src/testdata/file1".to_string(),
+                "xyz".to_string(),
+            ],
+            dirs: vec!["./src/testdata/dir1".to_string()],
+        };
+
+        let expected = vec![
+            "./src/testdata/file2".to_string(),
+            "./src/testdata/file1".to_string(),
+            "xyz".to_string(),
+            "./src/testdata/dir1".to_string(),
+        ];
+
+        assert_eq!(parsed.all(), expected);
     }
 }
