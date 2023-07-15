@@ -1,3 +1,5 @@
+extern crate vidirr;
+
 use clap::Parser;
 use std::fs::File;
 use std::io::Write;
@@ -25,10 +27,8 @@ fn main() {
     let target = vidirr::parse_args(&files, || Box::new(io::stdin().lock())).expect("cannot parse"); // TODO: Handle error
 
     let mut file_list = NamedTempFile::new().expect("cannot create temp file"); // TODO: Handle error
-    for file in target.all() {
-        writeln!(file_list, "{}", file).expect("cannot write")
-    }
 
+    vidirr::editor::write_with_ids(&mut file_list, &target.all()).expect("cannot write");
 
     println!("{:?}", file_list.path()); // TODO: Remove this.
 
