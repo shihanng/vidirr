@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
 tempfile = "3.5.0"
+anyhow = "1.0"
