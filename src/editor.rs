@@ -17,12 +17,12 @@ pub fn write_with_ids<W: Write>(
 }
 
 #[derive(PartialEq, Debug)]
-struct ParsedLine {
-    num: usize,
-    filename: String,
+pub struct ParsedLine {
+    pub num: usize,
+    pub filename: String,
 }
 
-fn parse_line(input: &str) -> Result<Option<ParsedLine>> {
+pub fn parse_line(input: &str) -> Result<Option<ParsedLine>> {
     let trimmed = input.trim_start();
 
     if trimmed.is_empty() {
