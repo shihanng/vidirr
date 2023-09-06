@@ -127,6 +127,19 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_line_nospace() {
+        let input = "345file with space 123";
+        let parsed = parse_line(input);
+        assert_eq!(
+            parsed.unwrap().unwrap(),
+            ParsedLine {
+                num: 345,
+                filename: "file with space 123".to_string(),
+            }
+        );
+    }
+
+    #[test]
     fn test_parse_line_no_number() {
         let input = "     file with space 123 ";
         let parsed = parse_line(input);
