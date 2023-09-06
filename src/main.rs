@@ -4,6 +4,7 @@ use std::io::Write;
 use std::io::{self, BufRead};
 use std::process::Command;
 use tempfile::NamedTempFile;
+use vidirr::ops;
 
 #[derive(Parser)]
 struct Cli {
@@ -26,7 +27,8 @@ fn main() {
 
     let mut file_list = NamedTempFile::new().expect("cannot create temp file"); // TODO: Handle error
 
-    vidirr::editor::write_with_ids(&mut file_list, &target.all()).expect("cannot write");
+    let items =
+        vidirr::editor::write_with_ids(&mut file_list, &target.all()).expect("cannot write");
 
     println!("{:?}", file_list.path()); // TODO: Remove this.
 
@@ -37,8 +39,22 @@ fn main() {
                                               //
     let reader = io::BufReader::new(File::open(file_list.path()).expect("cannot open file"));
 
+    let mut operator = ops::Operator::new(items);
     for line in reader.lines() {
-        let line = line.expect("cannot read line");
-        println!("{}", line);
+        let l = line.expect("cannot read line"); // TODO: Handle error
+
+        let parsed_line = vidirr::editor::parse_line(&l).expect("cannot parse line");
+        //    die "$0: unable to parse line \"$_\", aborting\n";
+
+        match parsed_line {
+            Some(parsed_line) => {
+                operator
+                    .apply_changes(parsed_line, ops::FS)
+                    .expect("cannot apply changes");
+                // TODO: Handle error
+                // handle error when src not exist (continue)
+            }
+            None => continue, // Skip empty line.
+        }
     }
 }
