@@ -1,5 +1,3 @@
-extern crate vidirr;
-
 use clap::Parser;
 use std::fs::File;
 use std::io::Write;
