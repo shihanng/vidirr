@@ -12,17 +12,20 @@ pub enum OpsError {
 }
 
 pub trait Operation {
-    fn rename(&self, from: &str, to: &str) -> Result<()>;
-}
-
-pub struct FS;
-
-impl Operation for FS {
     fn rename(&self, from: &str, to: &str) -> Result<()> {
         fs::rename(from, to)?;
         Ok(())
     }
+
+    fn copy(&self, from: &str, to: &str) -> Result<()> {
+        fs::copy(from, to)?;
+        Ok(())
+    }
 }
+
+pub struct FS;
+
+impl Operation for FS {}
 
 pub struct Operator {
     items: HashMap<usize, String>,
@@ -97,8 +100,7 @@ impl Operator {
 
             // TODO: We need to ignore the error from these
             if is_copy {
-                //     // TODO: enable this
-                //     fs::copy(&src, &new_name)?;
+                ops.copy(&src, &new_name)?;
             } else {
                 ops.rename(&src, &new_name)?;
             }
@@ -260,6 +262,58 @@ mod tests {
         temp.child("file_1").assert(predicate::path::missing());
         temp.child("file_2").assert(predicate::path::exists());
         temp.child("file_2~").assert(predicate::path::exists());
+    }
+
+    #[test]
+    fn test_apply_changes_copy() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        let temp_str = temp.to_str().unwrap();
+        let file_1 = temp.child("file_1");
+        file_1.touch().unwrap();
+
+        let items = [(1, file_1)]
+            .into_iter()
+            .map(|(k, v)| (k, v.to_str().unwrap().to_string()))
+            .collect();
+
+        let mut operator = Operator::new(items);
+
+        // First call changes nothing because the name is the same as in items.
+        {
+            let want_dones = HashMap::from([(1, temp_str.to_owned() + "/file_1")]);
+
+            let res = operator.apply_changes(
+                ParsedLine {
+                    num: 1,
+                    filename: temp_str.to_owned() + "/file_1",
+                },
+                FS,
+            );
+
+            assert!(res.is_ok());
+            assert!(operator.items.is_empty());
+            assert_eq!(operator.dones, want_dones);
+        }
+
+        // Second call is a copy because it has the same number.
+        {
+            let want_dones = HashMap::from([(1, temp_str.to_owned() + "/file_1_copy")]);
+
+            let res = operator.apply_changes(
+                ParsedLine {
+                    num: 1,
+                    filename: temp_str.to_owned() + "/file_1_copy",
+                },
+                FS,
+            );
+
+            assert!(res.is_ok());
+            assert!(operator.items.is_empty());
+            assert_eq!(operator.dones, want_dones);
+        }
+
+        temp.child("file_1").assert(predicate::path::exists());
+        temp.child("file_1_copy").assert(predicate::path::exists());
     }
 
     #[test]
