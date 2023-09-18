@@ -93,8 +93,7 @@ impl Operator {
             // Make sure directory to new_name exists.
             if let Some(parent) = new_name_path.parent() {
                 if !parent.exists() {
-                    // TODO: enable this
-                    // fs::create_dir_all(parent)?;
+                    fs::create_dir_all(parent)?;
                 }
             }
 
@@ -317,7 +316,7 @@ mod tests {
     }
 
     #[test]
-    fn test_apply_changes_directory() {
+    fn test_apply_changes_rename_directory() {
         let temp = assert_fs::TempDir::new().unwrap();
         let temp_str = temp.to_str().unwrap();
         let temp_sub = temp.child("dir_1");
@@ -350,6 +349,35 @@ mod tests {
 
         temp.child("dir_1").assert(predicate::path::missing());
         temp.child("dir_one/file_1")
+            .assert(predicate::path::exists());
+    }
+
+    #[test]
+    fn test_apply_changes_subdirectory() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        let temp_str = temp.to_str().unwrap();
+        let file_1 = temp.child("file_1");
+        file_1.touch().unwrap();
+
+        let items = HashMap::from([(2, file_1.path().to_str().unwrap().to_string())]);
+
+        let mut operator = Operator::new(items);
+
+        let want_dones = HashMap::from([(2, temp_str.to_owned() + "/subdir/file_one")]);
+
+        let res = operator.apply_changes(
+            ParsedLine {
+                num: 2,
+                filename: temp_str.to_owned() + "/subdir/file_one",
+            },
+            FS,
+        );
+
+        assert!(res.is_ok());
+        assert!(operator.items.is_empty());
+        assert_eq!(operator.dones, want_dones);
+
+        temp.child("subdir/file_one")
             .assert(predicate::path::exists());
     }
 
