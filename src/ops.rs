@@ -184,6 +184,25 @@ mod tests {
     fn test_apply_changes_empty_filename() {
         let items = HashMap::from([(1, "file_1".to_string())]);
 
+        let mut operator = Operator::new(items.clone());
+
+        let res = operator.apply_changes(
+            ParsedLine {
+                num: 1,
+                filename: "".to_string(),
+            },
+            FS,
+        );
+
+        assert!(res.is_ok());
+        assert_eq!(operator.items, items);
+        assert!(operator.dones.is_empty());
+    }
+
+    #[test]
+    fn test_apply_changes_src_not_exists() {
+        let items = HashMap::from([(1, "file_1".to_string())]);
+
         let mut operator = Operator::new(items);
 
         // File we want to rename from does not exist.
