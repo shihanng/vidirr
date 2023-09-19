@@ -17,12 +17,12 @@ pub fn write_with_ids<W: Write>(
 }
 
 #[derive(PartialEq, Debug)]
-struct ParsedLine {
-    num: usize,
-    filename: String,
+pub struct ParsedLine {
+    pub num: usize,
+    pub filename: String,
 }
 
-fn parse_line(input: &str) -> Result<Option<ParsedLine>> {
+pub fn parse_line(input: &str) -> Result<Option<ParsedLine>> {
     let trimmed = input.trim_start();
 
     if trimmed.is_empty() {
@@ -122,6 +122,19 @@ mod tests {
             ParsedLine {
                 num: 123,
                 filename: "".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_line_nospace() {
+        let input = "345file with space 123";
+        let parsed = parse_line(input);
+        assert_eq!(
+            parsed.unwrap().unwrap(),
+            ParsedLine {
+                num: 345,
+                filename: "file with space 123".to_string(),
             }
         );
     }

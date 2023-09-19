@@ -1,4 +1,5 @@
 pub mod editor;
+pub mod ops;
 
 use std::fs;
 use std::io::{self, BufRead, ErrorKind};
