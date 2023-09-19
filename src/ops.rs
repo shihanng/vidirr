@@ -9,6 +9,9 @@ use thiserror::Error;
 pub enum OpsError {
     #[error("{0} does not exist")]
     NotFound(String),
+
+    #[error("{0} failed to swap")]
+    FailedSwap(#[from] anyhow::Error),
 }
 
 pub trait Operation {
@@ -81,8 +84,9 @@ impl Operator {
             // Deal with swaps.
             if let Ok(true) = new_name_path.try_exists() {
                 let tmp_name = get_unique_tmp_name(&new_name);
-                ops.rename(&new_name, &tmp_name)?;
-                // TODO: continue if error but need to mark error code 1
+                if let Err(e) = ops.rename(&new_name, &tmp_name) {
+                    bail!(OpsError::FailedSwap(e))
+                }
 
                 // TODO: log
                 // print "'$name' -> '$tmp'\n";

@@ -53,6 +53,7 @@ fn main() {
                     .expect("cannot apply changes");
                 // TODO: Handle error
                 // handle error when src not exist (continue)
+                // handle FailedSwap (continue but error)
             }
             None => continue, // Skip empty line.
         }
