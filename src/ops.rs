@@ -25,6 +25,13 @@ pub enum OpsError {
         from: String,
         to: String,
     },
+
+    #[error("failed to remove {target:?}: {source:?}!")]
+    FailRemove {
+        #[source]
+        source: std::io::Error,
+        target: String,
+    },
 }
 
 pub trait Operation {
@@ -45,6 +52,16 @@ pub trait Operation {
                 source,
                 from: from.to_string(),
                 to: to.to_string()
+            })
+        }
+        Ok(())
+    }
+
+    fn remove(&self, target: &str) -> Result<()> {
+        if let Err(source) = fs::remove_dir_all(target) {
+            bail!(OpsError::FailRemove {
+                source,
+                target: target.to_string()
             })
         }
         Ok(())
@@ -161,6 +178,12 @@ impl Operator {
                 *name = to.to_string() + &name[from.len()..];
             }
         }
+    }
+
+    fn remove_remaining_items(&mut self) {
+        let mut items: Vec<String> = self.items.values().cloned().collect();
+        items.sort_by(|a, b| b.cmp(a)); // In reverse order.
+        println!("{:?}", items);
     }
 }
 
@@ -490,5 +513,26 @@ mod tests {
 
         let got = get_unique_tmp_name(&(temp_str.to_owned() + "/file_1"));
         assert_eq!(temp_str.to_owned() + "/file_1~1", got);
+    }
+
+    #[test]
+    fn test_remove_remaining_items() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        // let temp_str = temp.to_str().unwrap();
+        let file_1 = temp.child("file_1");
+        file_1.touch().unwrap();
+
+        let items = HashMap::from([(1, file_1.path().to_str().unwrap().to_string())]);
+
+        let mut operator = Operator::new(items);
+
+        operator.remove_remaining_items();
+
+        // assert!(res.is_ok());
+        // assert!(operator.items.is_empty());
+        // assert_eq!(operator.dones, want_dones);
+
+        temp.child("subdir/file_one")
+            .assert(predicate::path::exists());
     }
 }
