@@ -47,15 +47,18 @@ fn main() {
         //    die "$0: unable to parse line \"$_\", aborting\n";
 
         match parsed_line {
-            Some(parsed_line) => {
-                operator
-                    .apply_changes(parsed_line, ops::FS)
-                    .expect("cannot apply changes");
-                // TODO: Handle error
-                // handle error when src not exist (continue)
-                // handle FailedSwap (continue but error)
-            }
+            Some(parsed_line) => match operator.apply_changes(parsed_line, ops::FS) {
+                Ok(_) => {}
+                Err(err) => {
+                    if let Some(e) = err.downcast_ref::<ops::OpsError>() {
+                        println!("{}", e)
+                    } else {
+                        panic!("ahhhhhhh")
+                    }
+                }
+            },
             None => continue, // Skip empty line.
         }
     }
+    // Remove
 }

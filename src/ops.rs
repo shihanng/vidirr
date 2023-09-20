@@ -10,18 +10,43 @@ pub enum OpsError {
     #[error("{0} does not exist")]
     NotFound(String),
 
-    #[error("{0} failed to swap")]
-    FailedSwap(#[from] anyhow::Error),
+    #[error("failed to rename {from:?} to {to:?}: {source:?}!")]
+    FailRename {
+        #[source]
+        source: std::io::Error,
+        from: String,
+        to: String,
+    },
+
+    #[error("failed to copy {from:?} to {to:?}: {source:?}!")]
+    FailCopy {
+        #[source]
+        source: std::io::Error,
+        from: String,
+        to: String,
+    },
 }
 
 pub trait Operation {
     fn rename(&self, from: &str, to: &str) -> Result<()> {
-        fs::rename(from, to)?;
+        if let Err(source) = fs::rename(from, to) {
+            bail!(OpsError::FailRename {
+                source,
+                from: from.to_string(),
+                to: to.to_string()
+            })
+        }
         Ok(())
     }
 
     fn copy(&self, from: &str, to: &str) -> Result<()> {
-        fs::copy(from, to)?;
+        if let Err(source) = fs::copy(from, to) {
+            bail!(OpsError::FailCopy {
+                source,
+                from: from.to_string(),
+                to: to.to_string()
+            })
+        }
         Ok(())
     }
 }
@@ -84,9 +109,7 @@ impl Operator {
             // Deal with swaps.
             if let Ok(true) = new_name_path.try_exists() {
                 let tmp_name = get_unique_tmp_name(&new_name);
-                if let Err(e) = ops.rename(&new_name, &tmp_name) {
-                    bail!(OpsError::FailedSwap(e))
-                }
+                ops.rename(&new_name, &tmp_name)?;
 
                 // TODO: log
                 // print "'$name' -> '$tmp'\n";
@@ -101,7 +124,6 @@ impl Operator {
                 }
             }
 
-            // TODO: We need to ignore the error from these
             if is_copy {
                 ops.copy(&src, &new_name)?;
             } else {
