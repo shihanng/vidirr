@@ -10,7 +10,7 @@ pub enum OpsError {
     #[error("{0} does not exist")]
     NotFound(String),
 
-    #[error("failed to rename {from:?} to {to:?}: {source:?}!")]
+    #[error("failed to rename {from:?} to {to:?}: {source:?}")]
     FailRename {
         #[source]
         source: std::io::Error,
@@ -18,7 +18,7 @@ pub enum OpsError {
         to: String,
     },
 
-    #[error("failed to copy {from:?} to {to:?}: {source:?}!")]
+    #[error("failed to copy {from:?} to {to:?}: {source:?}")]
     FailCopy {
         #[source]
         source: std::io::Error,
